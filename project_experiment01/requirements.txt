@@ -1,0 +1,22 @@
+numpy>=1.19.5
+pandas>=1.2.4
+scikit-learn>=0.24.2
+librosa>=0.8.1
+webrtcvad>=2.0.10
+matplotlib>=3.4.3
+seaborn>=0.11.2
+PyYAML>=6.0
+joblib>=1.0.1
+tqdm>=4.62.3
+scipy>=1.7.1
+torch>=1.10.0  # 用於Silero VAD
+torchaudio>=0.10.0  # 用於Silero VAD和音頻處理
+transformers>=4.12.0  # 可選，用於某些預訓練模型
+tensorboard>=2.7.0  # 可選，用於深度學習實驗可視化
+soundfile>=0.10.3  # 音頻文件處理
+numba>=0.54.1  # 加速特徵計算
+
+# 測試依賴
+pytest>=6.2.5  # 測試框架
+pytest-cov>=2.12.1  # 測試覆蓋率工具
+pytest-mock>=3.6.1  # Mock 輔助工具 

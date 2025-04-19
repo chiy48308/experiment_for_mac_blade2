@@ -1,0 +1,177 @@
+# 實驗配置檔
+
+# 全局參數
+global:
+  sampling_rate: 16000
+  bit_depth: 16
+  window_size: 0.025
+  hop_length: 0.010
+  preemphasis: 0.97
+  data_path: "../data/raw"
+  output_path: "../results"
+  azure_results_path: "../data/azure_results"
+  cross_validation_folds: 5
+
+# Stack 實驗配置
+stacks:
+  stack1:
+    name: "WebRTC+MFCC+MFA 基準實驗"
+    description: "作為 baseline 對照"
+    vad:
+      method: "webrtc"
+      params:
+        frame_size: 30
+        aggressive_level: 2
+    features:
+      - method: "mfcc"
+        params:
+          n_mfcc: 13
+          include_delta: true
+          include_delta_delta: true
+    alignment:
+      method: "mfa"
+      params:
+        beam: 10
+        retry_beam: 40
+    scoring:
+      method: "rf_regressor"
+      params:
+        n_estimators: 100
+        max_depth: 10
+        min_samples_split: 5
+
+  stack2:
+    name: "Silero+MFCC+MFA 實驗"
+    description: "預訓練模型改善切割與評分精度"
+    vad:
+      method: "silero"
+      params:
+        threshold: 0.5
+        min_speech_duration_ms: 250
+        min_silence_duration_ms: 100
+    features:
+      - method: "mfcc"
+        params:
+          n_mfcc: 13
+          include_delta: true
+          include_delta_delta: true
+    alignment:
+      method: "mfa"
+      params:
+        beam: 10
+        retry_beam: 40
+    scoring:
+      method: "rf_regressor"
+      params:
+        n_estimators: 100
+        max_depth: 10
+        min_samples_split: 5
+
+  stack3:
+    name: "Adaptive VAD+多特徵融合實驗"
+    description: "適應性門檻 + 多特徵融合實驗"
+    vad:
+      method: "adaptive"
+      params:
+        initial_threshold: 0.5
+        adaptation_rate: 0.03
+        snr_based: true
+    features:
+      - method: "mfcc"
+        params:
+          n_mfcc: 13
+          include_delta: true
+          include_delta_delta: true
+      - method: "plp"
+        params:
+          n_plp: 13
+          include_delta: true
+    alignment:
+      - method: "mfa"
+        params:
+          beam: 10
+          retry_beam: 40
+      - method: "dtw"
+        params:
+          window_type: "sakoe_chiba"
+          window_size: 0.1
+    scoring:
+      method: "rf_regressor"
+      params:
+        n_estimators: 100
+        max_depth: 10
+        min_samples_split: 5
+        feature_selection: "rfe"
+
+  stack4:
+    name: "QA-VAD+多特徵實驗"
+    description: "加入品質過濾，對抗低品質語音"
+    vad:
+      method: "qa_vad"
+      params:
+        base_vad: "silero"
+        quality_threshold: 0.6
+        noise_reduction: true
+    features:
+      - method: "mfcc"
+        params:
+          n_mfcc: 13
+          include_delta: true
+          include_delta_delta: true
+      - method: "pitch"
+        params:
+          extract_jitter: true
+          extract_shimmer: true
+          extract_hnr: true
+    alignment:
+      - method: "mfa"
+        params:
+          beam: 10
+          retry_beam: 40
+      - method: "dtw"
+        params:
+          window_type: "sakoe_chiba"
+          window_size: 0.1
+    scoring:
+      method: "rf_regressor"
+      params:
+        n_estimators: 100
+        max_depth: 10
+        min_samples_split: 5
+
+  stack5:
+    name: "無VAD對照組"
+    description: "對照組（理論上最佳切割基準）"
+    vad:
+      method: null
+    features:
+      - method: null
+    alignment:
+      method: "mfa"
+      params:
+        beam: 10
+        retry_beam: 40
+    scoring:
+      method: null
+
+# 評估指標配置
+evaluation:
+  segmentation_metrics:
+    - "rmse"
+    - "dtw_distance"
+    - "segment_length_bias"
+    - "feature_retention_rate"
+    - "silence_false_alarm_rate"
+  scoring_metrics:
+    - "pearson_correlation"
+    - "spearman_correlation"
+    - "mae"
+    - "scoring_bias"
+    - "r2"
+    - "classification_consistency"
+  
+  visualization:
+    - "scatter_plot"
+    - "residual_plot"
+    - "feature_importance"
+    - "bland_altman_plot" 
